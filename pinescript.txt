@@ -1,0 +1,104 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © truepenny
+
+//@version=5
+indicator("novel indicator", overlay = true)
+
+indiType = input.string("Stochastic RSI", title = "Input Type", options = ["Stochastic RSI", "Traders Dynamic Index"])
+
+llevel = input.int(20, minval=1, title = "Low Level")
+hlevel = input.int(90, minval=1, title = "High Level")
+
+smoothK = input.int(3, minval=1, group = "Stochastic RSI")
+smoothD = input.int(3, minval=1, group = "Stochastic RSI")
+lengthRSI = input.int(14, minval=1, group = "Stochastic RSI")
+lengthStoch = input.int(14, minval=1, group = "Stochastic RSI")
+src = input(close, title="RSI Source", group = "Stochastic RSI")
+
+tf1 = input.timeframe("1D", title = "TimeFrame1", group = "Stochastic RSI")
+tf2 = input.timeframe("1W", title = "TimeFrame2", group = "Stochastic RSI")
+tf3 = input.timeframe("1M", title = "TimeFrame3", group = "Stochastic RSI")
+
+// rsi1 = ta.rsi(src, lengthRSI)
+// k = ta.sma(ta.stoch(rsi1, rsi1, rsi1, lengthStoch), smoothK)
+// d = ta.sma(k, smoothD)
+
+rsi1 = request.security(syminfo.tickerid, tf1, ta.rsi(src, lengthRSI))
+sto1 = request.security(syminfo.tickerid, tf1, ta.stoch(rsi1, rsi1, rsi1, lengthStoch))
+k1 = request.security(syminfo.tickerid, tf1, ta.sma(sto1, smoothK))
+d1 = request.security(syminfo.tickerid, tf1, ta.sma(k1, smoothD))
+
+rsi2 = request.security(syminfo.tickerid, tf2, ta.rsi(src, lengthRSI))
+sto2 = request.security(syminfo.tickerid, tf2, ta.stoch(rsi2, rsi2, rsi2, lengthStoch))
+k2 = request.security(syminfo.tickerid, tf2, ta.sma(sto2, smoothK))
+d2 = request.security(syminfo.tickerid, tf2, ta.sma(k2, smoothD))
+
+rsi3 = request.security(syminfo.tickerid, tf3, ta.rsi(src, lengthRSI))
+sto3 = request.security(syminfo.tickerid, tf3, ta.stoch(rsi3, rsi3, rsi3, lengthStoch))
+k3 = request.security(syminfo.tickerid, tf3, ta.sma(sto3, smoothK))
+d3 = request.security(syminfo.tickerid, tf3, ta.sma(k3, smoothD))
+
+color1 = (k1 < llevel or k1 > hlevel) ? color.black : k1 > d1 ? color.green : color.red
+color2 = (k2 < llevel or k2 > hlevel) ? color.black : k2 > d2 ? color.green : color.red
+color3 = (k3 < llevel or k3 > hlevel) ? color.black : k3 > d3 ? color.green : color.red
+// plot(k3, color=color.blue)
+// plot(d3, color=color.orange)
+
+// h0 = hline(hlevel)
+// h1 = hline(llevel)
+// fill(h0, h1, color=color.new(color.purple, 90))
+
+rsiPeriod = input.int(11, minval = 1, title = "RSI Period", group = "Traders Dynamic Index")
+bandLength = input.int(31, minval = 1, title = "Band Length", group = "Traders Dynamic Index")
+lengthrsipl = input.int(1, minval = 0, title = "Fast MA on RSI", group = "Traders Dynamic Index")
+lengthtradesl = input.int(9, minval = 1, title = "Slow MA on RSI", group = "Traders Dynamic Index")
+
+r1 = request.security(syminfo.tickerid, tf1, ta.rsi(src, lengthRSI))
+ma1 = request.security(syminfo.tickerid, tf1, ta.sma(r1, bandLength))
+offs1 = request.security(syminfo.tickerid, tf1, 1.6185 * ta.stdev(r1, bandLength))
+fastMA1 = request.security(syminfo.tickerid, tf1, ta.sma(r1, lengthrsipl))
+slowMA1 = request.security(syminfo.tickerid, tf1, ta.sma(r1, lengthtradesl))
+
+r2 = request.security(syminfo.tickerid, tf2, ta.rsi(src, lengthRSI))
+ma2 = request.security(syminfo.tickerid, tf2, ta.sma(r2, bandLength))
+offs2 = request.security(syminfo.tickerid, tf2, 1.6185 * ta.stdev(r2, bandLength))
+fastMA2 = request.security(syminfo.tickerid, tf2, ta.sma(r2, lengthrsipl))
+slowMA2 = request.security(syminfo.tickerid, tf2, ta.sma(r2, lengthtradesl))
+
+r3 = request.security(syminfo.tickerid, tf3, ta.rsi(src, lengthRSI))
+ma3 = request.security(syminfo.tickerid, tf3, ta.sma(r3, bandLength))
+offs3 = request.security(syminfo.tickerid, tf3, 1.6185 * ta.stdev(r3, bandLength))
+fastMA3 = request.security(syminfo.tickerid, tf3, ta.sma(r3, lengthrsipl))
+slowMA3 = request.security(syminfo.tickerid, tf3, ta.sma(r3, lengthtradesl))
+
+// plot(fastMA2)
+// plot(slowMA2)
+
+// hline(30)                                                               // Oversold
+// hline(50)                                                               // Midline
+// hline(70)                                                               // Overbought
+
+// upl = plot(up, "Upper Band", color = color.blue)                              // Upper Band
+// dnl = plot(dn, "Lower Band", color = color.blue)                              // Lower Band
+// midl = plot(mid, "Middle of Bands", color = color.orange, linewidth = 2)      // Middle of Bands
+
+// plot(slowMA, "Slow MA", color=color.green, linewidth=2)                       // Plot Slow MA
+// plot(fastMA, "Fast MA", color=color.red, linewidth=2)                         // Plot Fast MA
+
+// fill(upl, midl, color.red)                                         // Fill Upper Half Red
+// fill(midl, dnl, color.green)                                       // Fill Lower Half Green
+
+color4 = (fastMA1 < llevel or fastMA1 > hlevel) ? color.black : fastMA1 > slowMA1 ? color.green : color.red
+color5 = (fastMA2 < llevel or fastMA2 > hlevel) ? color.black : fastMA2 > slowMA2 ? color.green : color.red
+color6 = (fastMA3 < llevel or fastMA3 > hlevel) ? color.black : fastMA3 > slowMA3 ? color.green : color.red
+
+indiType1 = indiType == "Stochastic RSI" ? true : false
+
+var testTable = table.new(position = position.top_right, columns = 3, rows = 2, bgcolor = color.white, border_color = color.black, border_width = 2)
+if barstate.islast
+    table.cell(table_id = testTable, column = 0, row = 0, text = tf1)
+    table.cell(table_id = testTable, column = 1, row = 0, text = tf2)
+    table.cell(table_id = testTable, column = 2, row = 0, text = tf3)
+    table.cell(table_id = testTable, column = 0, row = 1, bgcolor = indiType1 ? color1 :color4, text="          ")
+    table.cell(table_id = testTable, column = 1, row = 1, bgcolor = indiType1 ? color2 :color5, text="          ")
+    table.cell(table_id = testTable, column = 2, row = 1, bgcolor = indiType1 ? color3 :color6, text="          ")
